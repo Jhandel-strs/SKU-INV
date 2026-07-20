@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKU Inventory Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="inventory-app">
+        <header class="app-header">
+            <div>
+                <p class="tagline">SKU Inventory Tracker</p>
+                <h1>Inventory Management System</h1>
+                <p class="subtext">Track and manage your inventory by SKU. Upload data, scan items, manage stock levels, and calculate inventory values efficiently.</p>
+            </div>
+            <div class="header-actions">
+                <div id="userInfo" class="user-info-pill" style="display: none;">
+                    <span class="status-pill">
+                        <span class="user-pill-icon">👤</span>
+                        <span class="user-pill-text">
+                            <strong id="currentUserName"></strong>
+                            <small id="currentUserTeam"></small>
+                        </span>
+                    </span>
+                </div>
+                <div class="header-nav-group">
+                    <a href="auth.html?view=settings" class="btn ghost">Account Settings</a>
+                    <a href="auth.html" class="btn ghost" id="logoutBtn" style="display: none;">Logout</a>
+                </div>
+            </div>
+        </header>
+
+        <section class="summary-grid">
+            <article class="stat-block">
+                <p class="muted">Loaded SKUs</p>
+                <h2 id="skuCount">0</h2>
+            </article>
+            <article class="stat-block">
+                <p class="muted">Total inventory items</p>
+                <h2 id="itemCount">0</h2>
+            </article>
+            <article class="stat-block">
+                <p class="muted">Last scanned code</p>
+                <h2 id="lastScanned">None</h2>
+            </article>
+            <article class="stat-block mode-display">
+                <p class="muted">Current scanner mode</p>
+                <h2 id="currentModeSummary">Check In</h2>
+            </article>
+        </section>
+
+        <section class="upload-panel card">
+            <div class="upload-header">
+                <div>
+                    <h2>Upload Excel / Google Sheet</h2>
+                    <p class="muted">Read Item Name, SKU, Price, Quantity, Measurement, and Serving Size.</p>
+                </div>
+                <button class="btn primary" id="uploadBtn">Choose File</button>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" hidden>
+            </div>
+            <div class="upload-info-grid">
+                <div>
+                    <p class="muted">Uploaded SKUs</p>
+                    <h3 id="loadedSkuCount">0</h3>
+                </div>
+                <div>
+                    <p class="muted">Rows processed</p>
+                    <h3 id="loadedRows">0</h3>
+                </div>
+                <div>
+                    <p class="muted">Upload status</p>
+                    <h3 id="uploadStatus">Waiting for file</h3>
+                </div>
+            </div>
+        </section>
+
+        <section class="storage-link card">
+            <div class="review-header">
+                <div>
+                    <h2>Inventory Storage</h2>
+                    <p class="muted">Manage long inventory lists on a dedicated page with search, add, and remove support.</p>
+                </div>
+                <div class="actions">
+                    <a class="btn primary" href="storage.html?view=inventory">Open Storage Page</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="calculator-panel card">
+            <div class="review-header">
+                <div>
+                    <h2>Calculator</h2>
+                    <p class="muted">Estimate totals for cases, counts, ounces, and servings.</p>
+                </div>
+            </div>
+            <div class="form-grid calculator-grid">
+                <label class="form-group">
+                    Cases Ordered
+                    <input type="number" id="calcCases" value="0" min="0">
+                </label>
+                <label class="form-group">
+                    Price per Case
+                    <input type="number" id="calcPricePerCase" value="0" min="0" step="0.01">
+                </label>
+                <label class="form-group">
+                    Counts per Case
+                    <input type="number" id="calcCountsPerCase" value="0" min="0">
+                </label>
+                <label class="form-group">
+                    OZ per Count
+                    <input type="number" id="calcOzPerCount" value="0" min="0" step="0.01">
+                </label>
+                <label class="form-group">
+                    Servings per Count
+                    <input type="number" id="calcServingsPerCount" value="0" min="0" step="0.1">
+                </label>
+                <label class="form-group">
+                    Total Counts Inventory
+                    <input type="text" id="calcTotalCounts" readonly>
+                </label>
+                <label class="form-group">
+                    Total Value
+                    <input type="text" id="calcTotalValue" readonly>
+                </label>
+                <label class="form-group">
+                    Total OZ Inventory
+                    <input type="text" id="calcTotalOz" readonly>
+                </label>
+                <label class="form-group">
+                    Estimated Servings
+                    <input type="text" id="calcTotalServings" readonly>
+                </label>
+            </div>
+            <div class="form-actions">
+                <button class="btn primary" id="calcBtn" type="button">Calculate</button>
+                <button class="btn ghost" id="calcResetBtn" type="button">Reset</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="review-header">
+                <div>
+                    <h2>Transaction History</h2>
+                    <p class="muted">Track who performed each transaction and what action was taken.</p>
+                </div>
+            </div>
+            <div class="form-grid calculator-grid">
+                <label class="form-group">
+                    User ID
+                    <input type="text" id="userIdInput" placeholder="Enter ID">
+                </label>
+                <label class="form-group">
+                    Action
+                    <select id="actionTypeSelect">
+                        <option value="Check In">Check In</option>
+                        <option value="Check Out">Check Out</option>
+                        <option value="Review">Review</option>
+                    </select>
+                </label>
+                <label class="form-group">
+                    Item / Note
+                    <input type="text" id="transactionNoteInput" placeholder="Item or note">
+                </label>
+            </div>
+            <div class="form-actions">
+                <button class="btn primary" id="addTransactionBtn" type="button">Add Transaction</button>
+                <button class="btn ghost" id="clearTransactionBtn" type="button">Clear History</button>
+            </div>
+            <div class="review-list" id="transactionHistoryList">
+                <p class="muted">No transactions yet.</p>
+            </div>
+        </section>
+
+        <section class="scanner-panel card">
+            <div class="scanner-grid">
+                <div class="scanner-left">
+                    <div class="scanner-header">
+                        <div>
+                            <h2>Barcode Scanner</h2>
+                            <p class="muted">Use your device camera to scan SKU barcodes automatically.</p>
+                        </div>
+                        <span class="status-pill" id="cameraStatus">Camera ready</span>
+                        <button class="btn ghost" id="cameraHelpBtn" title="Camera help">Need camera help?</button>
+                        <span class="status-pill" id="currentModeLabel">Mode: Check In</span>
+                    </div>
+                    <div class="video-wrap">
+                        <video id="scannerVideo" playsinline autoplay muted></video>
+                        <div class="scanner-overlay">
+                            <div class="scan-region">
+                                <div class="corner top-left"></div>
+                                <div class="corner top-right"></div>
+                                <div class="corner bottom-left"></div>
+                                <div class="corner bottom-right"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="muted small">Make sure your browser has camera permission enabled and allow the browser to access video.</p>
+                </div>
+                <div class="scanner-controls">
+                    <div class="mode-buttons">
+                        <button class="btn secondary mode-button active" id="modeCheckInBtn">Check In</button>
+                        <button class="btn secondary mode-button" id="modeCheckOutBtn">Check Out</button>
+                        <button class="btn secondary mode-button" id="modeReviewBtn">Review</button>
+                    </div>
+                    <button class="btn primary" id="startScanBtn">Start Scanning</button>
+                    <button class="btn ghost hidden" id="stopScanBtn">Stop Scanning</button>
+                    <button class="btn secondary hidden" id="finishReviewBtn">Finish Review</button>
+                    <div class="scanner-status" id="scannerMessage">Check In mode active. Select a mode and start scanning.</div>
+                </div>
+            </div>
+            <div class="history-panel card scanner-history-panel">
+                <div class="review-header">
+                    <div>
+                        <h2>Recent Scans</h2>
+                        <p class="muted">Track the latest barcode captures and whether they matched inventory.</p>
+                    </div>
+                    <button class="btn ghost" id="clearHistoryBtn">Clear History</button>
+                </div>
+                <div class="review-list" id="scanHistory">
+                    <p class="muted">No scans yet. Start scanning to see recent barcode results here.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="item-panel card hidden" id="itemFormSection">
+            <h2 id="itemFormTitle">Item Details</h2>
+            <form id="itemForm">
+                <div class="form-grid">
+                    <label class="form-group">
+                        Barcode
+                        <input type="text" id="itemBarcode" placeholder="Scanned barcode value">
+                    </label>
+                    <label class="form-group">
+                        SKU
+                        <input type="text" id="itemSku" required>
+                    </label>
+                    <label class="form-group">
+                        Item Name
+                        <input type="text" id="itemName" required>
+                    </label>
+                    <label class="form-group">
+                        Price per Case
+                        <input type="number" id="itemPricePerCase" step="0.01" min="0" required>
+                    </label>
+                    <label class="form-group">
+                        Cases Ordered
+                        <input type="number" id="itemCasesOrdered" min="0" required>
+                    </label>
+                    <label class="form-group">
+                        Counts per Case
+                        <input type="number" id="itemCountsPerCase" min="0" required>
+                    </label>
+                    <label class="form-group">
+                        Total Counts
+                        <input type="number" id="itemQuantity" min="0" required>
+                    </label>
+                    <label class="form-group">
+                        Unit
+                        <input type="text" id="itemUnit" placeholder="pieces, sets, kg">
+                    </label>
+                    <label class="form-group">
+                        OZ per Count
+                        <input type="number" id="itemTotalOzPc" step="0.01" min="0" placeholder="e.g. 0.5">
+                    </label>
+                    <label class="form-group">
+                        Servings per Count
+                        <input type="number" id="itemServingsPerCount" step="0.1" min="0" placeholder="e.g. 1">
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn ghost" id="cancelItemBtn">Cancel</button>
+                    <button type="button" class="btn secondary" id="saveOpenStorageBtn">Save & Open Storage</button>
+                    <button type="submit" class="btn primary">Save Item</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="review-panel card hidden" id="reviewSection">
+            <div class="review-header">
+                <div>
+                    <h2>Review Scan Report</h2>
+                    <p class="muted">Captured SKU list matched against saved inventory.</p>
+                </div>
+                <button class="btn primary" id="exportReviewBtn">Export Review</button>
+            </div>
+            <div class="review-list" id="reviewList"></div>
+        </section>
+
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <div id="cameraHelpModal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-panel">
+            <h3>Camera & Scanner Help</h3>
+            <p class="muted">If your phone's camera doesn't open, try these steps:</p>
+            <ul>
+                <li>Open this page over <strong>HTTPS</strong> or use <strong>localhost</strong> for testing.</li>
+                <li>Grant camera permission when the browser prompts.</li>
+                <li>Use the browser's site settings to allow camera if previously blocked.</li>
+                <li>Prefer a modern browser (Chrome, Edge, Firefox) and set camera to rear ('environment').</li>
+            </ul>
+            <div class="form-actions">
+                <button class="btn primary" id="cameraRetryBtn">Retry Camera Permission</button>
+                <button class="btn ghost" id="cameraHelpCloseBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+
