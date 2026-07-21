@@ -87,14 +87,29 @@
             </div>
         </section>
 
-        <section class="calculator-panel card">
+        <section class="calculator-panel card calc-compact">
             <div class="review-header">
                 <div>
                     <h2>Calculator</h2>
-                    <p class="muted">Estimate totals for cases, counts, ounces, and servings.</p>
+                    <p class="muted">Convert oz/pounds, size the reorder, check stock, and message the supplier.</p>
                 </div>
+                <span class="status-pill calc-indicator" id="calcStockIndicator" data-status="none">Stock: —</span>
             </div>
+
+            <h3 class="calc-subhead">Inventory &amp; Serving</h3>
             <div class="form-grid calculator-grid">
+                <label class="form-group">
+                    Item / SKU
+                    <input type="text" id="calcItemName" placeholder="Item name or SKU">
+                </label>
+                <label class="form-group">
+                    Measurement Unit
+                    <select id="calcUnit">
+                        <option value="PC">PC — counts (as-is)</option>
+                        <option value="LB">LB — pounds (× 16 → oz)</option>
+                        <option value="OZ">OZ — ounces</option>
+                    </select>
+                </label>
                 <label class="form-group">
                     Cases Ordered
                     <input type="number" id="calcCases" value="0" min="0">
@@ -108,13 +123,29 @@
                     <input type="number" id="calcCountsPerCase" value="0" min="0">
                 </label>
                 <label class="form-group">
-                    OZ per Count
+                    Amount per Count
                     <input type="number" id="calcOzPerCount" value="0" min="0" step="0.01">
                 </label>
                 <label class="form-group">
                     Servings per Count
                     <input type="number" id="calcServingsPerCount" value="0" min="0" step="0.1">
                 </label>
+            </div>
+
+            <h3 class="calc-subhead">Reorder (What / How much to order)</h3>
+            <div class="form-grid calculator-grid">
+                <label class="form-group">
+                    Par Level (counts)
+                    <input type="number" id="calcParLevel" value="0" min="0">
+                </label>
+                <label class="form-group">
+                    On Hand (counts)
+                    <input type="number" id="calcOnHand" value="0" min="0">
+                </label>
+            </div>
+
+            <h3 class="calc-subhead">Results</h3>
+            <div class="form-grid calculator-grid">
                 <label class="form-group">
                     Total Counts Inventory
                     <input type="text" id="calcTotalCounts" readonly>
@@ -124,6 +155,10 @@
                     <input type="text" id="calcTotalValue" readonly>
                 </label>
                 <label class="form-group">
+                    OZ per Count (converted)
+                    <input type="text" id="calcConvertedOz" readonly>
+                </label>
+                <label class="form-group">
                     Total OZ Inventory
                     <input type="text" id="calcTotalOz" readonly>
                 </label>
@@ -131,9 +166,35 @@
                     Estimated Servings
                     <input type="text" id="calcTotalServings" readonly>
                 </label>
+                <label class="form-group">
+                    Counts to Order
+                    <input type="text" id="calcCountsToOrder" readonly>
+                </label>
+                <label class="form-group">
+                    Cases to Order
+                    <input type="text" id="calcCasesToOrder" readonly>
+                </label>
+                <label class="form-group">
+                    Order Cost
+                    <input type="text" id="calcOrderCost" readonly>
+                </label>
             </div>
+
+            <h3 class="calc-subhead">Supplier Direct Message</h3>
+            <div class="form-grid calculator-grid">
+                <label class="form-group">
+                    Supplier Name
+                    <input type="text" id="calcSupplierName" placeholder="Supplier / vendor">
+                </label>
+                <label class="form-group">
+                    Supplier Email
+                    <input type="email" id="calcSupplierEmail" placeholder="orders@supplier.com">
+                </label>
+            </div>
+
             <div class="form-actions">
                 <button class="btn primary" id="calcBtn" type="button">Calculate</button>
+                <button class="btn secondary" id="calcSupplierBtn" type="button">Message Supplier</button>
                 <button class="btn ghost" id="calcResetBtn" type="button">Reset</button>
             </div>
         </section>
