@@ -114,6 +114,7 @@ class InventoryApp {
             calcTotalServings: document.getElementById('calcTotalServings'),
             calcCountsToOrder: document.getElementById('calcCountsToOrder'),
             calcCasesToOrder: document.getElementById('calcCasesToOrder'),
+            calcOrderCost: document.getElementById('calcOrderCost'),
             calcStockIndicator: document.getElementById('calcStockIndicator'),
             calcSupplierName: document.getElementById('calcSupplierName'),
             calcSupplierEmail: document.getElementById('calcSupplierEmail'),
@@ -197,6 +198,7 @@ class InventoryApp {
 
         const countsToOrder = Math.max(0, parLevel - onHand);
         const casesToOrder = countsPerCase > 0 ? Math.ceil(countsToOrder / countsPerCase) : 0;
+        const orderCost = casesToOrder * pricePerCase;
 
         this.elements.calcTotalCounts.value = totalCounts.toFixed(0);
         this.elements.calcTotalValue.value = totalValue.toFixed(2);
@@ -205,6 +207,7 @@ class InventoryApp {
         this.elements.calcTotalServings.value = totalServings.toFixed(1);
         this.elements.calcCountsToOrder.value = countsToOrder.toFixed(0);
         this.elements.calcCasesToOrder.value = casesToOrder.toFixed(0);
+        this.elements.calcOrderCost.value = orderCost.toFixed(2);
 
         this.updateStockIndicator(parLevel, onHand);
     }
@@ -242,6 +245,7 @@ class InventoryApp {
         const unit = this.elements.calcUnit.value;
         const casesToOrder = this.elements.calcCasesToOrder.value || '0';
         const countsToOrder = this.elements.calcCountsToOrder.value || '0';
+        const orderCost = this.elements.calcOrderCost.value || '0.00';
 
         const subject = `Order request: ${item}`;
         const bodyLines = [
@@ -251,6 +255,7 @@ class InventoryApp {
             `- Item / SKU: ${item}`,
             `- Cases to order: ${casesToOrder}`,
             `- Counts to order: ${countsToOrder}`,
+            `- Estimated order cost: ${orderCost}`,
             `- Measurement unit: ${unit}`,
             '',
             'Thank you.',
@@ -280,6 +285,7 @@ class InventoryApp {
         this.elements.calcTotalServings.value = '';
         this.elements.calcCountsToOrder.value = '';
         this.elements.calcCasesToOrder.value = '';
+        this.elements.calcOrderCost.value = '';
         this.updateStockIndicator(0, 0);
     }
 
