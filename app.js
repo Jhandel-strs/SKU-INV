@@ -98,15 +98,26 @@ class InventoryApp {
             reviewList: document.getElementById('reviewList'),
             exportReviewBtn: document.getElementById('exportReviewBtn'),
             clearStorageBtn: document.getElementById('clearStorageBtn'),
+            calcItemName: document.getElementById('calcItemName'),
+            calcUnit: document.getElementById('calcUnit'),
             calcCases: document.getElementById('calcCases'),
             calcPricePerCase: document.getElementById('calcPricePerCase'),
             calcCountsPerCase: document.getElementById('calcCountsPerCase'),
             calcOzPerCount: document.getElementById('calcOzPerCount'),
             calcServingsPerCount: document.getElementById('calcServingsPerCount'),
+            calcParLevel: document.getElementById('calcParLevel'),
+            calcOnHand: document.getElementById('calcOnHand'),
             calcTotalCounts: document.getElementById('calcTotalCounts'),
             calcTotalValue: document.getElementById('calcTotalValue'),
+            calcConvertedOz: document.getElementById('calcConvertedOz'),
             calcTotalOz: document.getElementById('calcTotalOz'),
             calcTotalServings: document.getElementById('calcTotalServings'),
+            calcCountsToOrder: document.getElementById('calcCountsToOrder'),
+            calcCasesToOrder: document.getElementById('calcCasesToOrder'),
+            calcStockIndicator: document.getElementById('calcStockIndicator'),
+            calcSupplierName: document.getElementById('calcSupplierName'),
+            calcSupplierEmail: document.getElementById('calcSupplierEmail'),
+            calcSupplierBtn: document.getElementById('calcSupplierBtn'),
             calcBtn: document.getElementById('calcBtn'),
             calcResetBtn: document.getElementById('calcResetBtn'),
             userIdInput: document.getElementById('userIdInput'),
@@ -142,47 +153,134 @@ class InventoryApp {
         this.elements.clearStorageBtn.addEventListener('click', () => this.resetStorage());
         this.elements.calcBtn.addEventListener('click', () => this.calculateValue());
         this.elements.calcResetBtn.addEventListener('click', () => this.resetCalculator());
+        this.elements.calcSupplierBtn.addEventListener('click', () => this.messageSupplier());
         this.elements.addTransactionBtn.addEventListener('click', () => this.addTransaction());
         this.elements.clearTransactionBtn.addEventListener('click', () => this.clearTransactions());
         [
+            this.elements.calcUnit,
             this.elements.calcCases,
             this.elements.calcPricePerCase,
             this.elements.calcCountsPerCase,
             this.elements.calcOzPerCount,
             this.elements.calcServingsPerCount,
+            this.elements.calcParLevel,
+            this.elements.calcOnHand,
         ].forEach((input) => {
-            input.addEventListener('input', () => this.calculateValue());
+            const event = input.tagName === 'SELECT' ? 'change' : 'input';
+            input.addEventListener(event, () => this.calculateValue());
         });
+    }
+
+    convertToOz(amount, unit) {
+        // Mirrors =IF(H="PC", G, IF(H="LB", G*16, G)) — pounds convert to ounces.
+        if (unit === 'LB') {
+            return amount * 16;
+        }
+        return amount;
     }
 
     calculateValue() {
         const cases = Number(this.elements.calcCases.value) || 0;
         const pricePerCase = Number(this.elements.calcPricePerCase.value) || 0;
         const countsPerCase = Number(this.elements.calcCountsPerCase.value) || 0;
-        const ozPerCount = Number(this.elements.calcOzPerCount.value) || 0;
+        const amountPerCount = Number(this.elements.calcOzPerCount.value) || 0;
         const servingsPerCount = Number(this.elements.calcServingsPerCount.value) || 0;
+        const unit = this.elements.calcUnit.value;
+        const parLevel = Number(this.elements.calcParLevel.value) || 0;
+        const onHand = Number(this.elements.calcOnHand.value) || 0;
 
+        const ozPerCount = this.convertToOz(amountPerCount, unit);
         const totalCounts = cases * countsPerCase;
         const totalValue = cases * pricePerCase;
         const totalOz = totalCounts * ozPerCount;
         const totalServings = totalCounts * servingsPerCount;
 
+        const countsToOrder = Math.max(0, parLevel - onHand);
+        const casesToOrder = countsPerCase > 0 ? Math.ceil(countsToOrder / countsPerCase) : 0;
+
         this.elements.calcTotalCounts.value = totalCounts.toFixed(0);
         this.elements.calcTotalValue.value = totalValue.toFixed(2);
+        this.elements.calcConvertedOz.value = ozPerCount.toFixed(2);
         this.elements.calcTotalOz.value = totalOz.toFixed(2);
         this.elements.calcTotalServings.value = totalServings.toFixed(1);
+        this.elements.calcCountsToOrder.value = countsToOrder.toFixed(0);
+        this.elements.calcCasesToOrder.value = casesToOrder.toFixed(0);
+
+        this.updateStockIndicator(parLevel, onHand);
+    }
+
+    updateStockIndicator(parLevel, onHand) {
+        const pill = this.elements.calcStockIndicator;
+        let status = 'none';
+        let label = 'Stock: —';
+        if (parLevel > 0) {
+            if (onHand <= 0) {
+                status = 'out';
+                label = 'Stock: Out';
+            } else if (onHand < parLevel) {
+                status = 'low';
+                label = 'Stock: Low';
+            } else {
+                status = 'ok';
+                label = 'Stock: OK';
+            }
+        }
+        pill.dataset.status = status;
+        pill.textContent = label;
+    }
+
+    messageSupplier() {
+        const email = (this.elements.calcSupplierEmail.value || '').trim();
+        if (!email) {
+            this.showToast('Enter a supplier email to send an order message.');
+            return;
+        }
+        this.calculateValue();
+
+        const item = (this.elements.calcItemName.value || '').trim() || 'inventory item';
+        const supplier = (this.elements.calcSupplierName.value || '').trim() || 'Supplier';
+        const unit = this.elements.calcUnit.value;
+        const casesToOrder = this.elements.calcCasesToOrder.value || '0';
+        const countsToOrder = this.elements.calcCountsToOrder.value || '0';
+
+        const subject = `Order request: ${item}`;
+        const bodyLines = [
+            `Hi ${supplier},`,
+            '',
+            `Please prepare the following order:`,
+            `- Item / SKU: ${item}`,
+            `- Cases to order: ${casesToOrder}`,
+            `- Counts to order: ${countsToOrder}`,
+            `- Measurement unit: ${unit}`,
+            '',
+            'Thank you.',
+        ];
+        const mailto = `mailto:${encodeURIComponent(email)}`
+            + `?subject=${encodeURIComponent(subject)}`
+            + `&body=${encodeURIComponent(bodyLines.join('\n'))}`;
+        window.location.href = mailto;
     }
 
     resetCalculator() {
+        this.elements.calcItemName.value = '';
+        this.elements.calcUnit.value = 'PC';
         this.elements.calcCases.value = 0;
         this.elements.calcPricePerCase.value = 0;
         this.elements.calcCountsPerCase.value = 0;
         this.elements.calcOzPerCount.value = 0;
         this.elements.calcServingsPerCount.value = 0;
+        this.elements.calcParLevel.value = 0;
+        this.elements.calcOnHand.value = 0;
+        this.elements.calcSupplierName.value = '';
+        this.elements.calcSupplierEmail.value = '';
         this.elements.calcTotalCounts.value = '';
         this.elements.calcTotalValue.value = '';
+        this.elements.calcConvertedOz.value = '';
         this.elements.calcTotalOz.value = '';
         this.elements.calcTotalServings.value = '';
+        this.elements.calcCountsToOrder.value = '';
+        this.elements.calcCasesToOrder.value = '';
+        this.updateStockIndicator(0, 0);
     }
 
     loadItems() {
