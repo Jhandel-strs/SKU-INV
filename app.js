@@ -151,7 +151,9 @@ class InventoryApp {
         }
         this.elements.itemForm.addEventListener('submit', (event) => this.handleItemSubmit(event));
         this.elements.exportReviewBtn.addEventListener('click', () => this.exportReviewCsv());
-        this.elements.clearStorageBtn.addEventListener('click', () => this.resetStorage());
+        if (this.elements.clearStorageBtn) {
+            this.elements.clearStorageBtn.addEventListener('click', () => this.resetStorage());
+        }
         this.elements.calcBtn.addEventListener('click', () => this.calculateValue());
         this.elements.calcResetBtn.addEventListener('click', () => this.resetCalculator());
         this.elements.calcSupplierBtn.addEventListener('click', () => this.messageSupplier());
